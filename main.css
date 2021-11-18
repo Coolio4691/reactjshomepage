@@ -93,7 +93,6 @@ body {
 
 .page {
     background-color: #1b1b1b;
-    background-image: url('background.jpg');
     height: 100%;
     width: 100%;
 }
@@ -338,4 +337,107 @@ i {
 
 .categoryWrapper div.mvDown > span > span > span:after {
     width:100%;
+}
+
+#settings {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 34px;
+    height: 34px;
+}
+
+#settings > img {
+    width: 34px;
+    height: 34px;
+}
+
+#settingsMenu {
+    z-index: 99;
+    background-color:#1b1b1b;
+    border-radius:50px;
+    min-width:400px;
+    min-height:550px;
+    max-width:400px;
+    max-height:550px;
+    position:absolute;
+    top:25vh;
+    left:68vh;
+    text-align:center;
+    color:#fff;
+    
+    overflow: scroll;
+
+    display: block;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#settingsMenu {
+    color: #646464;
+}
+
+#settingsMenu input {
+    border-radius:25px;
+    background-color:#272727;
+    border:1px solid #1f1f1f;
+    color:#646464;
+    overflow: hidden;
+    text-align: center;
+}
+    
+#settingsMenu input:focus {
+    outline: solid 1px #383838;
+}
+
+#backgroundLabel {
+    border:1px solid #ccc;
+    display:inline-block;
+    padding:6px 12px;
+    cursor:pointer;
+    background-repeat:no-repeat;
+    background-size:cover;
+    min-width:55px;
+    min-height:25px;
+    background-image: url("background.jpg");
+    margin-top: 20px;
+}
+
+#backgroundLabel > input {
+    display: none;
+}
+
+.scale-down-left {
+    animation:scale-down-left .4s ease both;
+}
+    
+.scale-up-bl {
+    animation:scale-up-right .4s ease both;
+}
+    
+
+@keyframes scale-down-left {
+    0% {
+        transform:translate(0px,0px) scale(1);
+        transform-origin:0 100%;
+    }
+    
+    100% {
+        transform:translate(-75vh,20vh) scale(0);
+        transform-origin:0 100%;
+    }
+}
+    
+@keyframes scale-up-right {
+    0% {
+        transform:translate(-75vh,20vh) scale(0);
+        transform-origin:0 100%;
+    }
+    
+    100% {
+        transform:translate(0px,0px) scale(1);
+        transform-origin:0 100%;
+    }
 }

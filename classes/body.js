@@ -16,6 +16,9 @@ class Body extends React.Component {
                     <div id="pageList">
                         {pageIcons}
                     </div>
+
+                    <Settings>
+                    </Settings>
                 </div>
                 <PageContainer/>
             </>

@@ -15,7 +15,7 @@ function handleClick(e) {
 }
 
 
-function changePage(direction, method) {
+async function changePage(direction, method) {
     var oldPosOffset = pageContainer.positionOffset;
     if(method == "set")
         pageContainer.positionOffset = direction
@@ -23,10 +23,29 @@ function changePage(direction, method) {
         pageContainer.positionOffset += ( direction > 0 ? 1 : - 1)
 
     var newPage = pageContainer.pages[pageContainer.positionOffset]
-    if(!newPage) return pageContainer.positionOffset = oldPosOffset;
+    if(!newPage) {
+      pageContainer.positionOffset = oldPosOffset 
+      
+      var nPage = pageContainer.pages[pageContainer.positionOffset];
+
+      if(await caches.has(nPage.name)) {
+        var cache = await caches.open(nPage.name)
+  
+        document.getElementById("backgroundLabel").style.backgroundImage = `url("${await (await cache.match(nPage.name)).text()}")`
+      }
+
+      return
+    }
+
 
     newPage.page.scrollIntoView({ behavior: "smooth", block: "end" })
     doSelected(newPage.pageIcon)
+
+    if(await caches.has(newPage.name)) {
+      var cache = await caches.open(newPage.name)
+
+      document.getElementById("backgroundLabel").style.backgroundImage = `url("${await (await cache.match(newPage.name)).text()}")`
+    }
 }
 
 

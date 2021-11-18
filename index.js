@@ -16,6 +16,7 @@ var namePage = {
 
 
 var secondPage = {
+    name: "secondpage",
     html: (
         <Page icon="search.png">
 
@@ -24,6 +25,7 @@ var secondPage = {
 }
 
 var thirdPage = {
+    name: "thirdpage",
     html: (
         <Page icon="trash.png">
 

@@ -4,7 +4,6 @@ class ContextMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {xPos: "0px", yPos: "0px", showMenu: false}
-        console.log(this)
     }
 
     componentDidMount() {
@@ -224,6 +223,8 @@ class WebsiteContainer extends React.Component {
         document.getElementById(this.props.id + "DeleteButton").addEventListener("click", async e => {
             await sendQuery(`DELETE FROM containerPages WHERE container = '${this.props.id}'`)
             await sendQuery(`DELETE FROM pageContainers WHERE id = '${this.props.id}'`)
+
+            websiteContainer = websiteContainer.filter(x => x != this)
 
             websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
 
@@ -601,6 +602,7 @@ async function pageInit() {
 }
 
 var homePage = {
+    name: "homepage",
     html: pageHtml,
     css: pageCSS,
     init: pageInit
