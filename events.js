@@ -1,7 +1,10 @@
+var currentBackgroundPos;
 document.onmousemove = async e => {
     if(!pageContainer) return;
     
-    pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = e.pageX * lookSpeed * -1 / 6 + 'px ' + e.pageY * lookSpeed * -1 / 6 + 'px ';
+    currentBackgroundPos = e.clientX * lookSpeed * -1 / 6 + 'px ' + e.clientY * lookSpeed * -1 / 6 + 'px ';
+
+    pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = currentBackgroundPos;
 }
 
 document.addEventListener("wheel", e => {

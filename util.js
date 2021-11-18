@@ -37,7 +37,7 @@ async function changePage(direction, method) {
       return
     }
 
-
+    newPage.page.style.backgroundPosition = currentBackgroundPos
     newPage.page.scrollIntoView({ behavior: "smooth", block: "end" })
     doSelected(newPage.pageIcon)
 
