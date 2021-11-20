@@ -16,10 +16,10 @@ class Page extends React.Component {
     this.pageIconElem = React.createRef()
 
     this.pageIcon = <img id={this.name} onLoad={this.onLoad} ref={this.pageIconElem} src={this.props.icon} position={pageContainer.pages.indexOf(this)} onClick={handleClick}/>
-
-    pageBody.forceUpdate();
     
     pageIcons.push(this.pageIcon)
+
+    pageBody.forceUpdate();
   }
 
   removeImg() {

@@ -46,7 +46,8 @@ async function updateCustomPages() {
     
     for(var i of customPages) {
         if(!(await caches.has(i.name)) || i.hidden == "true") {
-            //sendQuery(`DELETE FROM customPages WHERE name = '${i.name}' AND hidden = '${i.hidden}'`)
+            if(!(await caches.has(i.name))) sendQuery(`DELETE FROM customPages WHERE name = '${i.name}' AND hidden = '${i.hidden}'`)
+            
             continue; 
         }
 
