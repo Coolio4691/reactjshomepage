@@ -583,9 +583,7 @@ async function addContainer() {
 }
 
 async function pageInit() {
-    await sendQuery(`CREATE TABLE IF NOT EXISTS backgroundImages ('page' VARCHAR, 'image' VARCHAR);`)
     await sendQuery(`CREATE TABLE IF NOT EXISTS containerPages ('id' VARCHAR, 'url' VARCHAR, 'container' VARCHAR, 'overrideName' VARCHAR);`)
-    await sendQuery(`CREATE TABLE IF NOT EXISTS customPages ('name' VARCHAR, 'hidden' VARCHAR);`)
     await sendQuery(`CREATE TABLE IF NOT EXISTS pageContainers ('id' VARCHAR, 'containerName' VARCHAR, 'containerPosition' VARCHAR);`)
 
     document.getElementById("editContainer").addEventListener("click", e => { editContainers(); })
@@ -606,4 +604,7 @@ var homePage = {
     html: pageHtml,
     css: pageCSS,
     init: pageInit
+};
+
+function doHomepage() {
 }

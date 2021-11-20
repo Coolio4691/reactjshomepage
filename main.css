@@ -441,3 +441,33 @@ i {
         transform-origin:0 100%;
     }
 }
+
+#cityCode {
+    margin-top: 10px;
+}
+
+.customPageContainer {
+    outline: 1px solid #1f1f1f;
+    width: 80%;
+    height: 190px;
+    margin-left: 10%;
+    font-size: 1.2em;
+    border-radius: 12px;
+    background-color: #272727;
+}
+
+
+.customPage {
+    outline: 1px solid #646464;
+    color: #969696;
+    width: 98%;
+    height: 20px;
+    margin-left: 1%;
+    margin-top: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.customPage > span {
+    pointer-events: none;
+}

@@ -1,7 +1,8 @@
 function doSelected(target) {
-    pageContainer.pages.filter(i => i.pageIconElem.current.attributes["selected"] != null).every(v => { v.pageIconElem.current.removeAttribute("selected") })
+    pageContainer.pages.filter(i => i.pageIconElem.current != null &&  i.pageIconElem.current.attributes["selected"] != null).every(v => { v.pageIconElem.current.removeAttribute("selected") })
     
-    target.ref.current.setAttribute("selected", "")
+    if(target.ref.current != null)
+      target.ref.current.setAttribute("selected", "")
 }
 
 function handleLoad(e) {
@@ -14,9 +15,29 @@ function handleClick(e) {
     changePage(e.target.getAttribute("position"), "set")
 }
 
+function addPage(page) {
+  if(pageContainer) {
+    pages = pages.filter(e => e != page)
+    pages.push(page)
+
+    pageContainer.loadPages();
+
+    if(homeP)
+      homeP.forceUpdate();
+
+    pageContainer.forceUpdate();
+  }
+  else {
+    setTimeout(() => {
+      addPage(page)
+    }, 50);
+  }
+}
 
 async function changePage(direction, method) {
     var oldPosOffset = pageContainer.positionOffset;
+    if(pageContainer == undefined) return;
+    
     if(method == "set")
         pageContainer.positionOffset = direction
     else 
@@ -27,6 +48,8 @@ async function changePage(direction, method) {
       pageContainer.positionOffset = oldPosOffset 
       
       var nPage = pageContainer.pages[pageContainer.positionOffset];
+
+      if(!nPage) return;
 
       if(await caches.has(nPage.name)) {
         var cache = await caches.open(nPage.name)

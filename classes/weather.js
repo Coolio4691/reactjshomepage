@@ -1,51 +1,111 @@
 class Weather extends React.Component {
     constructor(props) {
-      super(props);
-      this.state = { time: new Date() };
-      this.weatherLoop();
+        super(props);
+        this.state = { time: new Date() };
+        this.cityCode = 2145461;
+        this.weatherLoop();
+
+        this.addCityChanger();
+    }
+
+    async addCityChanger() {
+        this.cityCode = (await sendQuery(`SELECT cityCode FROM cityCodes`))[0].cityCode;
+        if(settingsClass) {
+            if(!settingsClass.hasCityChanger) {
+                settingsClass.hasCityChanger = true;
+        
+                settingsClass.children[1] = (
+                    <div style={{ marginTop: 10 + "px" }}>
+                        <h1>City Code</h1>
+                        <input id="cityCode" title="Get the code from https://openweathermap.org" defaultValue={this.cityCode}/>
+                    </div>
+                )
+        
+                settingsClass.forceUpdate();
+        
+                this.addInputEvent()
+            }
+        }
+        else {
+            setTimeout(() => {
+                this.addCityChanger();
+            }, 50);
+        }
+    }
+
+    addInputEvent() {
+        if(document.getElementById("cityCode")) {
+            document.getElementById("cityCode").addEventListener("change", async e => {
+                if(isNaN(Number(e.target.value)))
+                    return e.target.value = e.target.value.replace(/[^0-9]/gi, "");
+
+                this.cityCode = Number(e.target.value)
+
+                this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+                this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+                
+                await sendQuery(`UPDATE cityCodes SET cityCode = '${this.cityCode}'`)
+
+                this.forceUpdate();
+            })
+
+            document.getElementById("cityCode").addEventListener("input", e => {
+                if(isNaN(Number(e.target.value)))
+                    e.target.value = e.target.value.replace(/[^0-9]/gi, "");
+            })
+        }
+        else {
+            setTimeout(() => {
+                this.addInputEvent();
+            }, 50);
+        }
     }
   
     async weatherLoop() {
-        this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=2145461&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
-        this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=2145461&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+        this.cityCode = (await sendQuery(`SELECT cityCode FROM cityCodes`))[0].cityCode;
+
+        this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+        this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
         this.setState({ time: new Date() })
 
         var minutesRemaining = (60 - this.state.time.getMinutes()) * 60000;
 
         setTimeout(async () => {
-            this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=2145461&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+            this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
             this.setState({ time: new Date() })
 
             this.weatherLoop();
         }, minutesRemaining);
+
+
     }
 
     getWeather(type) {
         switch(type) {
             case "temp":
-                if(this.weather == null) return "0.0C"
+                if(this.weather == null || this.weather.main == null) return "0.0C"
                 return `${this.weather.main.temp}C`
             case "min":
-                if(this.weather == null) return "0.0C"
+                if(this.weather == null || this.weather.main == null) return "0.0C"
                 return `${this.weather.main.temp_min}C`
             case "max":
-                if(this.weather == null) return "0.0C"
+                if(this.weather == null || this.weather.main == null) return "0.0C"
                 return `${this.weather.main.temp_max}C`
             case "humidity":
-                if(this.weather == null) return "0%"
+                if(this.weather == null || this.weather.main == null) return "0%"
                 return `${this.weather.main.humidity}%`
             case "rain":
-                if(this.weather == null) return "0mm"
+                if(this.weather == null || this.weather.precipitation == null) return "0mm"
                 if(this.weather.precipitation) return this.weather.precipitation.value + "mm";
                 return "0mm"
             case "clouds":
-                if(this.weather == null) return "0"
+                if(this.weather == null || this.weather.clouds == null) return "0"
                 return `${this.weather.clouds.all}`
             case "icon":
-                if(this.weather == null) return "";
+                if(this.weather == null || this.weather.weather == null) return "";
                 return `https://openweathermap.org/img/w/${this.weather.weather[0].icon}.png`
             case "description":
-                if(this.weather == null) return "";
+                if(this.weather == null || this.weather.weather == null) return "";
                 return this.weather.weather[0].description
             default:
                 return ""

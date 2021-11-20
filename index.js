@@ -13,27 +13,65 @@ var namePage = {
     }
 }
 */
+var customPages = [];
+var settingsCustomPage;
 
+function doPages() {
+    while(document.getElementsByName("customPage").length >= 1) {
+        document.getElementsByName("customPage")[0].remove();
+    }
 
-var secondPage = {
-    name: "secondpage",
-    html: (
-        <Page icon="search.png">
+    pages = []
 
-        </Page>
-    )
+    pages.push(homePage)
+
+    updateCustomPages();
+
+    if(pageContainer) {
+        for(var i of pageContainer.pages) {
+            i.addImg();
+        }
+
+        if(pageContainer.positionOffset <= pageContainer.pages.length) {
+            
+            pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = currentBackgroundPos
+            pageContainer.pages[pageContainer.positionOffset].page.scrollIntoView({ behavior: "smooth", block: "end" })
+            doSelected(pageContainer.pages[pageContainer.positionOffset].pageIcon)   
+        }
+    }
 }
 
-var thirdPage = {
-    name: "thirdpage",
-    html: (
-        <Page icon="trash.png">
+async function updateCustomPages() {
+    customPages = await sendQuery("SELECT * FROM customPages")
+    
+    for(var i of customPages) {
+        if(!(await caches.has(i.name)) || i.hidden == "true") {
+            //sendQuery(`DELETE FROM customPages WHERE name = '${i.name}' AND hidden = '${i.hidden}'`)
+            continue; 
+        }
 
-        </Page>
-    )
+        var cache = await caches.open(i.name)
+        cache = await cache.match(i.name)
+
+        var text = await cache.text()
+
+        var script = document.createElement("script")
+        script.text = `${text}`
+        script.name = "customPage"
+
+        script.type = "application/x-javascript"
+
+        document.body.appendChild(script);
+
+        if(homeP)
+            homeP.forceUpdate();
+
+        if(pageContainer)
+            pageContainer.forceUpdate();
+    }
 }
 
-pages = [homePage, secondPage, thirdPage]
+doPages();
 
 document.body.scrollTo(0, 0)
 
@@ -49,16 +87,38 @@ async function init() {
     db = await initDB()
 
     await sendQuery(`CREATE TABLE IF NOT EXISTS cityCodes ('cityCode' VARCHAR)`)
+    await sendQuery(`CREATE TABLE IF NOT EXISTS customPages ('name' VARCHAR, 'hidden' VARCHAR);`)
 
     await sendQuery(`INSERT INTO cityCodes SELECT '2145461' WHERE NOT EXISTS(SELECT 1 FROM cityCodes WHERE cityCode = '2145461')`)
 
     ReactDOM.render(<Body />, document.getElementById("root"));
 
+    settingsClass.children[2] = (
+        <CustomPageSettings />
+    )
+
+    reloadCustomPageSettings()
+}
+
+async function reloadCustomPageSettings() {
+    if(settingsCustomPage) {
+        customPages = await sendQuery("SELECT * FROM customPages")
+
+        settingsCustomPage.forceUpdate();
+    }
+    else {
+        setTimeout(() => {
+            return reloadCustomPageSettings();
+        }, 50);
+    }
 }
 
 init()
 
 async function initDB() {
+    if(!SQL)
+        SQL = await initSqlJs({ locateFile: filename => `sql-wasm.wasm` })
+
     if(await caches.has("database")) {
         var cache = await caches.open("database")
         var buf = JSON.parse(await (await cache.match("database")).text())

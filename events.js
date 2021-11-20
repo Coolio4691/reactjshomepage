@@ -4,7 +4,8 @@ document.onmousemove = async e => {
     
     currentBackgroundPos = e.clientX * lookSpeed * -1 / 6 + 'px ' + e.clientY * lookSpeed * -1 / 6 + 'px ';
 
-    pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = currentBackgroundPos;
+    if(pageContainer.pages[pageContainer.positionOffset])
+        pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = currentBackgroundPos;
 }
 
 document.addEventListener("wheel", e => {
@@ -34,7 +35,7 @@ document.addEventListener("keydown", e => {
         changePage(pageContainer.pages.length - 1, "set")
     }
 
-    console.log(e)
+    //console.log(e)
 })
 
 document.addEventListener("click", e => {
