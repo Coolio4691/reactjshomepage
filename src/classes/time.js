@@ -24,3 +24,5 @@ class Time extends React.Component {
     }
   }
   
+
+export { Time }

@@ -1,3 +1,8 @@
+import { sendQuery, genID } from "../index.js";
+import * as vars from "../vars.js"
+import * as page from "../classes/page.js"
+import * as util from "../util.js"
+
 var editingElement;
 
 class ContextMenu extends React.Component {
@@ -16,7 +21,7 @@ class ContextMenu extends React.Component {
             document.getElementById("contextEdit").addEventListener("click", async e => {
                 this.setState({ xPos: this.state.xPos, yPos: this.state.yPos, showMenu: false });
 
-                var sql = await sendQuery(`SELECT * FROM containerPages WHERE url = '${editingElement.id}' AND container = '${editingElement.parentNode.parentNode.id.replace("WebsiteContainer", "")}'`)
+                var sql = await sendQuery(`SELECT * FROM containerPages WHERE id = '${editingElement.id}' AND container = '${editingElement.parentNode.parentNode.id.replace("WebsiteContainer", "")}'`)
                 sql = sql[0]
 
                 var url = prompt("Enter the website URL")
@@ -30,7 +35,7 @@ class ContextMenu extends React.Component {
 
                 websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-                homeP.forceUpdate();
+                vars.homeP.forceUpdate();
                 websiteContainer.every(e => {
                     e.forceUpdate()
                 })
@@ -57,7 +62,7 @@ class ContextMenu extends React.Component {
 
                 websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-                homeP.forceUpdate();
+                vars.homeP.forceUpdate();
                 websiteContainer.every(e => {
                     e.forceUpdate()
                 })
@@ -125,6 +130,7 @@ class ContextMenu extends React.Component {
 
 var toDrop;
 var dropTo;
+
 class Website extends React.Component {
     constructor(props) {
       super(props);
@@ -143,7 +149,7 @@ class Website extends React.Component {
         if(this.props.editing == "") {
             return (
                 <div id="website" className="website editingPage">
-                    <h1 id={this.props.link} draggable="true" ref={ele => this.element = ele}>
+                    <h1 id={this.props.id} draggable="true" ref={ele => this.element = ele}>
                         <img src={this.props.image}/>
                         <a className="linkText" href={this.props.link.split("//").length <= 1 ? "//" + this.props.link : this.props.link}>{this.props.name}</a>
                     </h1>
@@ -153,7 +159,7 @@ class Website extends React.Component {
         else {
             return (
                 <div id="website" className="website">
-                    <h1 id={this.props.link} ref={ele => this.element = ele}>
+                    <h1 id={this.props.id} ref={ele => this.element = ele}>
                         <img src={this.props.image}/>
                         <a className="linkText" href={this.props.link.split("//").length <= 1 ? "//" + this.props.link : this.props.link}>{this.props.name}</a>
                     </h1>
@@ -175,6 +181,10 @@ class Website extends React.Component {
         var toDropSQL = (await sendQuery(`SELECT * FROM containerPages WHERE id = '${toDrop.id}' AND container = '${container}'`))[0]
         var dropToSQL = (await sendQuery(`SELECT * FROM containerPages WHERE id = '${dropTo.id}' AND container = '${container}'`))[0]
 
+        console.log(container)
+        console.log(toDrop)
+        console.log(toDropSQL)
+
         await sendQuery(`UPDATE containerPages SET 
             id = CASE WHEN id = '${dropToSQL.id}' THEN '${toDropSQL.id}' ELSE '${dropToSQL.id}' END,
             url = CASE WHEN url = '${dropToSQL.url}' THEN '${toDropSQL.url}' ELSE '${dropToSQL.url}' END,
@@ -184,7 +194,7 @@ class Website extends React.Component {
         websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
         websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-        homeP.forceUpdate();
+        vars.homeP.forceUpdate();
         this.forceUpdate();
 
         dropTo = null
@@ -200,7 +210,7 @@ class WebsiteContainer extends React.Component {
       websiteContainer.push(this);
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         document.getElementById(this.props.id + "AddButton").addEventListener("click", async e => {
             var url = prompt("Enter the website URL")
             if(url == null || url == "") return;
@@ -212,7 +222,7 @@ class WebsiteContainer extends React.Component {
             websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
             websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-            homeP.forceUpdate();
+            vars.homeP.forceUpdate();
             this.forceUpdate();
         })
 
@@ -230,10 +240,14 @@ class WebsiteContainer extends React.Component {
 
             websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
             
-            homeP.forceUpdate();
+            vars.homeP.forceUpdate();
             this.forceUpdate();
         })
         
+        document.getElementById(this.props.id + "AddButton").src = await util.getSetImage("add.png")
+        document.getElementById(this.props.id + "EditButton").src = await util.getSetImage("edit.png")
+        document.getElementById(this.props.id + "DeleteButton").src = await util.getSetImage("trash.png")
+
         this.pageNameElement.addEventListener("dblclick", async e => {
             var newName = prompt("Enter the new name")
             
@@ -243,7 +257,7 @@ class WebsiteContainer extends React.Component {
         
             websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
 
-            homeP.forceUpdate();
+            vars.homeP.forceUpdate();
             this.forceUpdate();
         })
 
@@ -268,9 +282,9 @@ class WebsiteContainer extends React.Component {
         }
     
         function elementDrag(e) {
-            if(!pageContainer) return;
+            if(!vars.pageContainer) return;
 
-            pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = e.pageX * lookSpeed * -1 / 6 + 'px ' + e.pageY * lookSpeed * -1 / 6 + 'px ';
+            vars.pageContainer.pages[vars.pageContainer.positionOffset].page.style.backgroundPosition = e.pageX * vars.lookSpeed * -1 / 6 + 'px ' + e.pageY * vars.lookSpeed * -1 / 6 + 'px ';
             
             e = e || window.event;
             e.preventDefault();
@@ -289,14 +303,16 @@ class WebsiteContainer extends React.Component {
     
             document.onmouseup = null;
             document.onmousemove = e => {
-                if(!pageContainer) return;
+                if(!vars.pageContainer) return;
     
-                pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = e.pageX * lookSpeed * -1 / 6 + 'px ' + e.pageY * lookSpeed * -1 / 6 + 'px ';
+                vars.pageContainer.pages[vars.pageContainer.positionOffset].page.style.backgroundPosition = e.pageX * vars.lookSpeed * -1 / 6 + 'px ' + e.pageY * vars.lookSpeed * -1 / 6 + 'px ';
             }
         }
     }
 
     render() {
+        if(!this.state.editing && this.state.editingPages) this.state.editingPages = false;
+        
         if(this.state.editing) {
             return (
                 <div id={this.props.id + "WebsiteContainer"} style={{ left: this.props.position.split(",")[0] + "px", top: this.props.position.split(",")[1] + "px" }} className="websiteContainer">
@@ -304,9 +320,9 @@ class WebsiteContainer extends React.Component {
                         <h1 ref={ele => this.pageNameElement = ele}>{this.props.name}</h1>
                     </div>
                     <div className="buttonContainer" editing="">
-                        <img id={this.props.id + "EditButton"} src="edit.png" className="button pageEdit"/>
-                        <img id={this.props.id + "AddButton"} src="add.png" className="button pageAdd"/>
-                        <img id={this.props.id + "DeleteButton"} src="trash.png" className="button pageDel"/>
+                        <img id={this.props.id + "EditButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageEdit"/>
+                        <img id={this.props.id + "AddButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageAdd"/>
+                        <img id={this.props.id + "DeleteButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageDel"/>
                     </div>
                     {this.formatLinks(websiteLinks)}
                 </div>
@@ -319,9 +335,9 @@ class WebsiteContainer extends React.Component {
                         <h1 ref={ele => this.pageNameElement = ele}>{this.props.name}</h1>
                     </div>
                     <div className="buttonContainer">
-                        <img id={this.props.id + "EditButton"} src="edit.png" className="button pageEdit"/>
-                        <img id={this.props.id + "AddButton"} src="add.png" className="button pageAdd"/>
-                        <img id={this.props.id + "DeleteButton"} src="trash.png" className="button pageDel"/>
+                        <img id={this.props.id + "EditButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageEdit"/>
+                        <img id={this.props.id + "AddButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageAdd"/>
+                        <img id={this.props.id + "DeleteButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageDel"/>
                     </div>
                     {this.formatLinks(websiteLinks)}
                 </div>
@@ -338,27 +354,20 @@ class WebsiteContainer extends React.Component {
                 pageName = e.overrideName;
             }  
             else {
-                pageName = getWebName(extractHostname(e.url)).sld;
+                pageName = util.getWebName(util.extractHostname(e.url)).sld;
                 pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
             }
 
             if(this.state.editingPages) {
-                return <Website container={this.props.id} name={pageName} editing="" link={e.url} image={"https://favicon.yandex.net/favicon/" + e.url} />
+                return <Website key={`${e.id}Key`} container={this.props.container} id={e.id} name={pageName} editing="" link={e.url} image={"https://www.google.com/s2/favicons?domain=" + e.url} />
             }
 
-            return <Website container={this.props.id} name={pageName} link={e.url} image={"https://favicon.yandex.net/favicon/" + e.url} />
+            return <Website key={`${e.id}Key`} container={this.props.container} id={e.id} name={pageName} link={e.url} image={"https://www.google.com/s2/favicons?domain=" + e.url} />
         })
 
         return links
     }
 }
-
-//{websiteContainers.map(e => <Website name={e.containerName} link="https://www.google.com" image="add.png" />)}
-  //<Website name={e.containerName} link="https://www.google.com" image="add.png" />
-/*
-<Website name="test" link="https://www.google.com" image="add.png"/>
-<Website name="ye" link="https://www.youtube.com" image="edit.png"/>
-*/
 
 const CustomMenu = () => (
     <>
@@ -371,21 +380,30 @@ const CustomMenu = () => (
     </>
 );
 
+//#region icon
+var homeIcon = "data:application/octet-stream;base64,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"
+//#endregion
+
 class HomePage extends React.Component {
     constructor(props) {
       super(props);
       this.state = { rerender: false };
-      homeP = this;
+      vars.homeP = this;
+    }
+
+    async componentDidMount() {
+        document.getElementById("editContainer").src = await util.getSetImage("edit.png")
+        document.getElementById("addContainer").src = await util.getSetImage("add.png")
     }
 
     render() {
         return (
-            <Page icon="home.webp">
+            <page.Page icon={homeIcon}>
                 <ContextMenu ><CustomMenu /></ContextMenu>
-                {websiteContainers.map(e => <WebsiteContainer id={e.id} name={e.containerName} position={e.containerPosition} />)}
-                <img id="editContainer" className="button" src="edit.png"/>
-                <img id="addContainer" className="button" src="add.png"/>
-            </Page>
+                {websiteContainers.map(e => <WebsiteContainer key={`${e.id}Key`} id={e.id} name={e.containerName} position={e.containerPosition} />)}
+                <img id="editContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
+                <img id="addContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
+            </page.Page>
         )
     }
 
@@ -393,7 +411,7 @@ class HomePage extends React.Component {
 }
 
 var pageHtml = (
-    <HomePage/>
+    <HomePage key="homePageKey"/>
 )
 
 var pageCSS = `
@@ -496,6 +514,7 @@ a {
     width: 25px;
     height: 25px;
     padding-right: 5px;
+    border-radius: 20px !important;
 }
 
 .website {
@@ -557,7 +576,6 @@ a {
 `
 
 var websiteContainer = [];
-var homeP;
 var websiteContainers = []
 var websiteLinks = []
 var editing = false;
@@ -579,7 +597,7 @@ async function addContainer() {
     websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
     websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-    homeP.forceUpdate();
+    vars.homeP.forceUpdate();
 }
 
 async function pageInit() {
@@ -593,7 +611,7 @@ async function pageInit() {
 
     websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-    homeP.setState({ rerender: !homeP.state.rerender })
+    vars.homeP.setState({ rerender: !vars.homeP.state.rerender })
     websiteContainer.every(e => {
         e.setState({ rerender: !e.state.rerender, editing: e.state.editing, editingPages: e.state.editingPages })
     })
@@ -606,5 +624,4 @@ var homePage = {
     init: pageInit
 };
 
-function doHomepage() {
-}
+export { homePage };

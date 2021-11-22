@@ -1,4 +1,8 @@
-var editingElement;
+import * as vars from '../vars.js';
+import { doPages } from '../index.js';
+import { sendQuery } from '../index.js';
+
+var customEditingElement;
 
 var pageDropTo;
 var pageToDrop;
@@ -31,23 +35,29 @@ class CustomPageContextMenu extends React.Component {
             document.getElementById("pageContextUploadInput").addEventListener("change", async e => {
 
                 var file = e.target.files[0]
-
-                console.log(editingElement)
                 
-                console.log(file)
-
                 if(!file.type.includes("text") && !file.type.includes("application")) return;
         
                 var reader = new FileReader();
                 reader.addEventListener("load", async () => {
-                    await caches.delete(editingElement.getAttribute("name"))
+                    await caches.delete(customEditingElement.getAttribute("name"))
         
-                    var cache = await caches.open(editingElement.getAttribute("name"))
-                    await cache.put(editingElement.getAttribute("name"), new Response(reader.result))
+                    var cache = await caches.open(customEditingElement.getAttribute("name"))
+                    await cache.put(customEditingElement.getAttribute("name"), new Response(reader.result))
 
-                    editingElement = null;
+                    if(vars.pageContainer) {
+                        for(var i of vars.pageContainer.pages) {
+                            i.removeImg();
+                        }
+                    }
+
+                    customEditingElement = null;
                     uploading = false;
 
+
+                    vars.customPages = await sendQuery(`SELECT * FROM customPages`);
+
+                    vars.settingsCustomPage.forceUpdate();
                     doPages();
                 })
         
@@ -66,23 +76,21 @@ class CustomPageContextMenu extends React.Component {
             document.getElementById("pageContextHidden").addEventListener("click", async e => {
                 this.setState({ xPos: this.state.xPos, yPos: this.state.yPos, showMenu: false });
 
-                await sendQuery(`UPDATE customPages SET hidden = '${editingElement.getAttribute("ishidden") == "false" ? "true" : "false"}' WHERE name = '${editingElement.getAttribute("name")}' AND hidden = '${editingElement.getAttribute("ishidden")}'`)
+                await sendQuery(`UPDATE customPages SET hidden = '${customEditingElement.getAttribute("ishidden") == "false" ? "true" : "false"}' WHERE name = '${customEditingElement.getAttribute("name")}' AND hidden = '${customEditingElement.getAttribute("ishidden")}'`)
             
-                customPages = await sendQuery(`SELECT * FROM customPages`);
-                
-                /*if(editingElement.getAttribute("ishidden") == "false")
-                    pageIcons = pageIcons.filter(e => e.ref.current.id != editingElement.getAttribute("name"))
-
-                pageIcons = pageIcons.filter(e => e.ref.current.id != "")*/
-
-                if(pageContainer) {
-                    for(var i of pageContainer.pages) {
+                vars.customPages = await sendQuery(`SELECT * FROM customPages`);
+                    
+                if(vars.pageContainer) {
+                    for(var i of vars.pageContainer.pages) {
                         i.removeImg();
                     }
+
+                    if(customEditingElement.getAttribute("ishidden") == "false")
+                        vars.pageContainer.removePageFromName(customEditingElement.getAttribute("name"))
                 }
 
-                pageBody.forceUpdate();
-                settingsCustomPage.forceUpdate();
+                vars.pageBody.forceUpdate();
+                vars.settingsCustomPage.forceUpdate();
                 doPages();
             })
         }
@@ -98,13 +106,23 @@ class CustomPageContextMenu extends React.Component {
             document.getElementById("pageContextDelete").addEventListener("click", async e => {
                 this.setState({ xPos: this.state.xPos, yPos: this.state.yPos, showMenu: false });
 
-                await caches.delete(editingElement.getAttribute("name"))
+                vars.pageContainer.removePageFromName(customEditingElement.getAttribute("name"))
+                
+                if(vars.pageContainer) {
+                    for(var i of vars.pageContainer.pages) {
+                        i.removeImg();
+                    }
+                }
+        
+                await caches.delete(customEditingElement.getAttribute("name"))
+                await sendQuery(`DELETE FROM customPages WHERE name = '${customEditingElement.getAttribute("name")}' AND hidden = '${customEditingElement.getAttribute("ishidden")}'`)
 
-                await sendQuery(`DELETE FROM customPages WHERE name = '${editingElement.getAttribute("name")}' AND hidden = '${editingElement.getAttribute("ishidden")}'`)
-            
-                customPages = await sendQuery(`SELECT * FROM customPages`);
+                vars.customPages = await sendQuery(`SELECT * FROM customPages`);
 
-                settingsCustomPage.forceUpdate();
+                vars.setIcons([])
+
+                vars.pageBody.forceUpdate();
+                vars.settingsCustomPage.forceUpdate();
                 doPages();
             })
         }
@@ -124,7 +142,7 @@ class CustomPageContextMenu extends React.Component {
         if (this.state.showMenu) {
             
             if(!uploading)
-                editingElement = null;
+                customEditingElement = null;
 
             this.setState({ xPos: this.state.xPos, yPos: this.state.yPos, showMenu: false });
 
@@ -133,20 +151,17 @@ class CustomPageContextMenu extends React.Component {
     };
 
     handleContextMenu = (e) => {
-        editingElement = null;
+        customEditingElement = null;
 
         if(e.target.parentNode.id == "customPage")
-            editingElement = e.target;
+            customEditingElement = e.target;
         
-        if(editingElement) {
+        if(customEditingElement) {
             e.preventDefault();
 
+            this.setState({xPos: `${e.x - customEditingElement.getBoundingClientRect().x}px`, yPos: `${e.y - document.getElementById("settingsMenu").getBoundingClientRect().top}px`, showMenu: true, });
 
-            console.log(e)
-
-            this.setState({xPos: `${e.x - editingElement.getBoundingClientRect().x}px`, yPos: `${e.y - document.getElementById("settingsMenu").getBoundingClientRect().top}px`, showMenu: true, });
-
-            document.getElementById("pageContextHiddenText").textContent = (editingElement.getAttribute("ishidden") == "false" ? "Hide" : "Show" ) 
+            document.getElementById("pageContextHiddenText").textContent = (customEditingElement.getAttribute("ishidden") == "false" ? "Hide" : "Show" ) 
 
             this.forceUpdate();
         }
@@ -188,8 +203,6 @@ class AddCustomPageContextMenu extends React.Component {
             document.getElementById("customPageContextUploadInput").addEventListener("change", async e => {
 
                 var file = e.target.files[0]
-
-                console.log(file)
 
                 if(!file.type.includes("text") && !file.type.includes("application")) return;
         
@@ -288,9 +301,9 @@ class CustomPageSetting extends React.Component {
         pageToDrop = null
         pageDropTo = null
 
-        customPages = await sendQuery(`SELECT * FROM customPages`)
+        vars.customPages = await sendQuery(`SELECT * FROM customPages`)
 
-        settingsCustomPage.forceUpdate();
+        vars.settingsCustomPage.forceUpdate();
     } 
 
     render() {
@@ -308,7 +321,7 @@ class CustomPageSettings extends React.Component {
     constructor(props) {
         super(props);
         this.state = { };
-        settingsCustomPage = this;
+        vars.settingsCustomPage = this;
     }
 
     componentDidMount() {
@@ -340,10 +353,12 @@ class CustomPageSettings extends React.Component {
             <div style={{ marginTop: 10 + "px"}}>
                 <h1>Custom Pages</h1>
                 <div className="customPageContainer">
-                    {customPages.map(e => <CustomPageSetting name={e.name} hidden={e.hidden == "false" ? false : true} />)}
+                    {vars.customPages.map(e => <CustomPageSetting key={`${e.name}Key`} name={e.name} hidden={e.hidden == "false" ? false : true} />)}
                 </div>
             </div>
             </>
         )
     }
 }
+
+export { CustomPageSettings }

@@ -1,3 +1,7 @@
+import * as vars from "../vars.js"
+import { sendQuery, } from "../index.js";
+import * as util from "../util.js";
+
 class Weather extends React.Component {
     constructor(props) {
         super(props);
@@ -10,18 +14,18 @@ class Weather extends React.Component {
 
     async addCityChanger() {
         this.cityCode = (await sendQuery(`SELECT cityCode FROM cityCodes`))[0].cityCode;
-        if(settingsClass) {
-            if(!settingsClass.hasCityChanger) {
-                settingsClass.hasCityChanger = true;
+        if(vars.settingsClass) {
+            if(!vars.settingsClass.hasCityChanger) {
+                vars.settingsClass.hasCityChanger = true;
         
-                settingsClass.children[1] = (
-                    <div style={{ marginTop: 10 + "px" }}>
+                vars.settingsClass.children[1] = (
+                    <div key="weatherSettingsKey" style={{ marginTop: 10 + "px" }}>
                         <h1>City Code</h1>
                         <input id="cityCode" title="Get the code from https://openweathermap.org" defaultValue={this.cityCode}/>
                     </div>
                 )
         
-                settingsClass.forceUpdate();
+                vars.settingsClass.forceUpdate();
         
                 this.addInputEvent()
             }
@@ -101,9 +105,6 @@ class Weather extends React.Component {
             case "clouds":
                 if(this.weather == null || this.weather.clouds == null) return "0"
                 return `${this.weather.clouds.all}`
-            case "icon":
-                if(this.weather == null || this.weather.weather == null) return "";
-                return `https://openweathermap.org/img/w/${this.weather.weather[0].icon}.png`
             case "description":
                 if(this.weather == null || this.weather.weather == null) return "";
                 return this.weather.weather[0].description
@@ -112,10 +113,21 @@ class Weather extends React.Component {
         }
     }
 
+    componentDidMount() {
+        this.updateIcon();
+    }
+
+    async updateIcon() {
+        this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+        this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+        
+        document.getElementById("weatherIcon").src = await util.getSetImage(`https://openweathermap.org/img/w/${this.weather.weather[0].icon}.png`)
+    }
+
     render() {
         return (
             <>
-            <img title={this.getWeather("description")} src={this.getWeather("icon")} id="weatherIcon" style={{width: 40 + "px", height: 40 + "px", float: "right", zIndex: -1, marginLeft: -10 + "px", marginTop: -2 + "px", display: "none"}} onLoad={e => e.target.style.display = "block"} />
+            <img title={this.getWeather("description")} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } id="weatherIcon" style={{width: 40 + "px", height: 40 + "px", float: "right", zIndex: -1, marginLeft: -10 + "px", marginTop: -2 + "px", display: "none"}} onLoad={e => e.target.style.display = "block"} />
             <div id="weather" className="categoryWrapper">
                 <h1 style={{pointerEvents: "auto", userSelect: "auto", cursor: "pointer"}} id="weatherText">{this.getWeather("temp")}</h1>
                 <div id="weatherBox" style={{pointerEvents: "none"}}><span><span><span>
@@ -141,5 +153,5 @@ class Weather extends React.Component {
     }
 }
   
-
+export { Weather }
 //http://api.openweathermap.org/data/2.5/weather?id=2145461&appid=51473f473ba9fc29fc3b5735dd245eff

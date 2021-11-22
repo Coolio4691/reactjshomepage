@@ -1,76 +1,107 @@
+import * as vars from "./vars.js"
+import * as rules from "./rules.js"
+
+
+
+const getBase64 = (file) => new Promise(function (resolve, reject) {
+  let reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result)
+  reader.onerror = (error) => reject('Error: ', error);
+})
+
+async function getSetImage(image, data) {
+  if(await caches.has(image)) {
+    var cache = await caches.open(image)
+    cache = await cache.match(image)
+
+    return await cache.text();
+  }
+  else {
+    var imgData;
+
+    if(data)
+      imgData = data;
+    else 
+      imgData = await getBase64(await (await fetch(image)).blob())
+
+    await (await caches.open(image)).put(image, new Response(imgData))
+
+    return imgData;
+  }
+}
+
 function doSelected(target) {
-    pageContainer.pages.filter(i => i.pageIconElem.current != null &&  i.pageIconElem.current.attributes["selected"] != null).every(v => { v.pageIconElem.current.removeAttribute("selected") })
+    vars.pageContainer.pages.filter(i => i.pageIconElem.current != null &&  i.pageIconElem.current.attributes["selected"] != null).every(v => { v.pageIconElem.current.removeAttribute("selected") })
     
     if(target.ref.current != null)
       target.ref.current.setAttribute("selected", "")
 }
 
 function handleLoad(e) {
-    pageIconElements.push(e.target)
-    pageContainer.pages[e.target.getAttribute("position")].pageIcon = e.target;
-    
+  vars.pageIconElements.push(e.target)
+  vars.pageContainer.pages[e.target.getAttribute("position")].pageIcon = e.target;
 }
 
 function handleClick(e) {
     changePage(e.target.getAttribute("position"), "set")
 }
 
-function addPage(page) {
-  if(pageContainer) {
-    pages = pages.filter(e => e != page)
-    pages.push(page)
-
-    pageContainer.loadPages();
-
-    if(homeP)
-      homeP.forceUpdate();
-
-    pageContainer.forceUpdate();
+window.addPage = (page) => {
+  if(vars.pageContainer) {
+    vars.pages = vars.pages.filter(e => e != page)
+    vars.pages.push(page)
   }
   else {
     setTimeout(() => {
-      addPage(page)
+      window.addPage(page)
     }, 50);
   }
 }
 
 async function changePage(direction, method) {
-    var oldPosOffset = pageContainer.positionOffset;
-    if(pageContainer == undefined) return;
-    
-    if(method == "set")
-        pageContainer.positionOffset = direction
-    else 
-        pageContainer.positionOffset += ( direction > 0 ? 1 : - 1)
+    var oldPosOffset = vars.pageContainer.positionOffset;
+    if(vars.pageContainer == undefined) return;
 
-    var newPage = pageContainer.pages[pageContainer.positionOffset]
+    if(method == "set")
+      vars.pageContainer.positionOffset = direction
+    else 
+      vars.pageContainer.positionOffset += ( direction > 0 ? 1 : - 1)
+
+    var newPage = vars.pageContainer.pages[vars.pageContainer.positionOffset]
     if(!newPage) {
-      pageContainer.positionOffset = oldPosOffset 
+      vars.pageContainer.positionOffset = oldPosOffset 
       
-      var nPage = pageContainer.pages[pageContainer.positionOffset];
+      var nPage = vars.pageContainer.pages[vars.pageContainer.positionOffset];
 
       if(!nPage) return;
 
-      if(await caches.has(nPage.name)) {
-        var cache = await caches.open(nPage.name)
+      if(await caches.has(`${nPage.name}Img`)) {
+        var cache = await caches.open(`${nPage.name}Img`)
   
-        document.getElementById("backgroundLabel").style.backgroundImage = `url("${await (await cache.match(nPage.name)).text()}")`
+        document.getElementById("backgroundLabel").style.backgroundImage = `url("${await (await cache.match(`${nPage.name}Img`)).text()}")`
       }
 
-      return
+      return;
     }
 
-    newPage.page.style.backgroundPosition = currentBackgroundPos
+    newPage.page.style.backgroundPosition = vars.currentBackgroundPos
     newPage.page.scrollIntoView({ behavior: "smooth", block: "end" })
     doSelected(newPage.pageIcon)
 
-    if(await caches.has(newPage.name)) {
-      var cache = await caches.open(newPage.name)
+    if(await caches.has(`${newPage.name}Img`)) {
+      var cache = await caches.open(`${newPage.name}Img`)
 
-      document.getElementById("backgroundLabel").style.backgroundImage = `url("${await (await cache.match(newPage.name)).text()}")`
+      cache = await cache.match(`${newPage.name}Img`)
+
+      var imgData = await cache.text()
+
+      document.getElementById("backgroundLabel").style.backgroundImage = `url("${imgData}")`
     }
+
 }
 
+//#region api
 
 var maxInt = 2147483647, base = 36, tMin = 1, tMax = 26, skew = 38, damp = 700, initialBias = 72, initialN = 128, delimiter = '-', baseMinusTMin = base - tMin;
 
@@ -241,18 +272,16 @@ function toASCII(input) {
 
 var internals = {};
 
-$.getJSON("rules.json", data => {
-  internals.rules = data.map(function (rule) {
 
-        return {
-            rule: rule,
-            suffix: rule.replace(/^(\*\.|\!)/, ''),
-            punySuffix: -1,
-            wildcard: rule.charAt(0) === '*',
-            exception: rule.charAt(0) === '!'
-        };
-    });
-})
+internals.rules = rules.rules.map(function (rule) {
+  return {
+    rule: rule,
+    suffix: rule.replace(/^(\*\.|\!)/, ''),
+    punySuffix: -1,
+    wildcard: rule.charAt(0) === '*',
+    exception: rule.charAt(0) === '!'
+  };
+});
 internals.validate = function (input) {
 
     // Before we can validate we need to take care of IDNs with unicode chars.
@@ -465,3 +494,5 @@ function getWebName(input) {
       return handlePunycode();
 }
 //#endregion
+
+export { handleClick, handleLoad, getWebName, extractHostname, changePage, doSelected, getSetImage }

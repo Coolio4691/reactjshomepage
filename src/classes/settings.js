@@ -1,15 +1,15 @@
-var settings = ["background"];
-var settingsClass
+import * as vars from "../vars.js"
+import * as util from "../util.js"
 
 class Settings extends React.Component {
     constructor(props) {
         super(props);
         this.state = { };
-        settingsClass = this;
+        vars.settingsClass = this;
         this.children = [];
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         document.addEventListener("click", e => {
             var settingsMenu = document.getElementById("settingsMenu");
 
@@ -40,14 +40,16 @@ class Settings extends React.Component {
                 settingsMenu.classList.remove("scale-down-left")
                 settingsMenu.classList.add("scale-up-bl")
             }
-        }) 
+        })
+        
+        document.getElementById("settingsBtnImg").src = await util.getSetImage("settings.png");
     }
 
     render() {
         return (
             <>
                 <div id="settings">
-                    <img className="button" src="settings.png"/>
+                    <img id="settingsBtnImg" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button"/>
                 </div>
                 <div id="settingsMenu" className="hidden scale-down-left" style={{position: "absolute", overflow: "hidden"}}>
                     <div style={{overflow: "visible"}}>
@@ -59,3 +61,5 @@ class Settings extends React.Component {
         )
     }
 }
+
+export { Settings }

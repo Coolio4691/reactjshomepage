@@ -1,11 +1,13 @@
-var currentBackgroundPos;
-document.onmousemove = async e => {
-    if(!pageContainer) return;
-    
-    currentBackgroundPos = e.clientX * lookSpeed * -1 / 6 + 'px ' + e.clientY * lookSpeed * -1 / 6 + 'px ';
+import * as vars from "./vars";
+import { changePage } from "./util";
 
-    if(pageContainer.pages[pageContainer.positionOffset])
-        pageContainer.pages[pageContainer.positionOffset].page.style.backgroundPosition = currentBackgroundPos;
+document.onmousemove = async e => {
+    if(!vars.pageContainer) return;
+    
+    vars.currentBackgroundPos = e.clientX * vars.lookSpeed * -1 / 6 + 'px ' + e.clientY * vars.lookSpeed * -1 / 6 + 'px ';
+
+    if(vars.pageContainer.pages[vars.pageContainer.positionOffset])
+        vars.pageContainer.pages[vars.pageContainer.positionOffset].page.style.backgroundPosition = vars.currentBackgroundPos;
 }
 
 document.addEventListener("wheel", e => {
@@ -32,7 +34,7 @@ document.addEventListener("keydown", e => {
     else if(e.key == "End") {
         e.preventDefault()
 
-        changePage(pageContainer.pages.length - 1, "set")
+        changePage(vars.pageContainer.pages.length - 1, "set")
     }
 
     //console.log(e)
