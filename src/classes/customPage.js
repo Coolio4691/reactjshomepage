@@ -290,6 +290,8 @@ class CustomPageSetting extends React.Component {
     async drop(ev) {  
         pageDropTo = ev.target
 
+        console.log(pageDropTo.getAttribute("name"))
+
         var toDropSQL = (await sendQuery(`SELECT * FROM customPages WHERE name = '${pageToDrop.getAttribute("name")}'`))[0]
         var dropToSQL = (await sendQuery(`SELECT * FROM customPages WHERE name = '${pageDropTo.getAttribute("name")}'`))[0]
 
@@ -303,7 +305,11 @@ class CustomPageSetting extends React.Component {
 
         vars.customPages = await sendQuery(`SELECT * FROM customPages`)
 
+        vars.setIcons([])
+
+        vars.pageBody.forceUpdate();
         vars.settingsCustomPage.forceUpdate();
+        doPages();
     } 
 
     render() {
