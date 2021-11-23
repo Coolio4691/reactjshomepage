@@ -53,7 +53,7 @@ class ContextMenu extends React.Component {
             document.getElementById("contextDelete").addEventListener("click", async e => {
                 this.setState({ xPos: this.state.xPos, yPos: this.state.yPos, showMenu: false });
 
-                var sql = await sendQuery(`SELECT * FROM containerPages WHERE url = '${editingElement.id}' AND container = '${editingElement.parentNode.parentNode.id.replace("WebsiteContainer", "")}'`)
+                var sql = await sendQuery(`SELECT * FROM containerPages WHERE id = '${editingElement.id}' AND container = '${editingElement.parentNode.parentNode.id.replace("WebsiteContainer", "")}'`)
                 sql = sql[0]
 
                 await sendQuery(`DELETE FROM containerPages WHERE id = '${sql.id}' AND url = '${sql.url}' AND container = '${sql.container}' AND overrideName = '${sql.overrideName}'`)

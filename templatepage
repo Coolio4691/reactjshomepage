@@ -1,0 +1,21 @@
+//#region icon
+var icon = "base64image"
+//#endregion icon
+
+var html = `
+<window.page.Page key="pagenamePageKey" icon="${icon}"> 
+    add any jsx element here
+</window.page.Page>
+`
+
+var page = {
+    html: eval(JSXTransformer.transform(html).code),
+    css: ``,
+    async init() {
+        console.log("Hello World!")
+        console.log("filename.js loaded")
+    },
+    name: "pagename"
+}
+
+window.addPage(page) //required
