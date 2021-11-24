@@ -226,10 +226,6 @@ class WebsiteContainer extends React.Component {
             this.forceUpdate();
         })
 
-        document.getElementById(this.props.id + "EditButton").addEventListener("click", e => {
-            this.setState({ rerender: !this.state.rerender, editing: this.state.editing, editingPages: !this.state.editingPages })
-        })
-
         document.getElementById(this.props.id + "DeleteButton").addEventListener("click", async e => {
             await sendQuery(`DELETE FROM containerPages WHERE container = '${this.props.id}'`)
             await sendQuery(`DELETE FROM pageContainers WHERE id = '${this.props.id}'`)
@@ -245,7 +241,6 @@ class WebsiteContainer extends React.Component {
         })
         
         document.getElementById(this.props.id + "AddButton").src = await util.getSetImage("add.png")
-        document.getElementById(this.props.id + "EditButton").src = await util.getSetImage("edit.png")
         document.getElementById(this.props.id + "DeleteButton").src = await util.getSetImage("trash.png")
 
         this.pageNameElement.addEventListener("dblclick", async e => {
@@ -320,7 +315,6 @@ class WebsiteContainer extends React.Component {
                         <h1 ref={ele => this.pageNameElement = ele}>{this.props.name}</h1>
                     </div>
                     <div className="buttonContainer" editing="">
-                        <img id={this.props.id + "EditButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageEdit"/>
                         <img id={this.props.id + "AddButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageAdd"/>
                         <img id={this.props.id + "DeleteButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageDel"/>
                     </div>
@@ -335,7 +329,6 @@ class WebsiteContainer extends React.Component {
                         <h1 ref={ele => this.pageNameElement = ele}>{this.props.name}</h1>
                     </div>
                     <div className="buttonContainer">
-                        <img id={this.props.id + "EditButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageEdit"/>
                         <img id={this.props.id + "AddButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageAdd"/>
                         <img id={this.props.id + "DeleteButton"} style={{ display: "none" }} onLoad={e => e.target.style.display = "block" } className="button pageDel"/>
                     </div>
@@ -355,7 +348,9 @@ class WebsiteContainer extends React.Component {
             }  
             else {
                 pageName = util.getWebName(util.extractHostname(e.url)).sld;
-                pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+                if(pageName && pageName.length >= 1)
+                    pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+                else pageName = "Invalid"
             }
 
             if(this.state.editingPages) {
@@ -387,8 +382,9 @@ var homeIcon = "data:application/octet-stream;base64,UklGRm4JAABXRUJQVlA4TGIJAAA
 class HomePage extends React.Component {
     constructor(props) {
       super(props);
-      this.state = { rerender: false };
-      vars.homeP = this;
+      this.state = { editing: false };
+      vars.homeP = this; 
+      if(!this.children) this.children = [];
     }
 
     async componentDidMount() {
@@ -398,7 +394,8 @@ class HomePage extends React.Component {
 
     render() {
         return (
-            <page.Page icon={homeIcon}>
+            <page.Page ref={ele => this.element = ele} icon={homeIcon}>
+                {this.children.map(e => e)}
                 <ContextMenu ><CustomMenu /></ContextMenu>
                 {websiteContainers.map(e => <WebsiteContainer key={`${e.id}Key`} id={e.id} name={e.containerName} position={e.containerPosition} />)}
                 <img id="editContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
@@ -467,9 +464,9 @@ var pageCSS = `
 }
 
 .pageAdd {
-    position: absolute;
-    left: 38%;
+    float: left !important;
 }
+
 
 .pageDel {
     float: right !important;
@@ -582,8 +579,9 @@ var editing = false;
 
 function editContainers() {
     editing = !editing;
+    vars.homeP.setState({ editing: editing })
     for(var e of websiteContainer) {
-        e.setState({ rerender: e.state.rerender, editing: editing, editingPages: e.state.editingPages })
+        e.setState({ rerender: e.state.rerender, editing: editing, editingPages: editing })
     }
 }
 
@@ -611,9 +609,9 @@ async function pageInit() {
 
     websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
-    vars.homeP.setState({ rerender: !vars.homeP.state.rerender })
+    vars.homeP.setState({ editing: editing })
     websiteContainer.every(e => {
-        e.setState({ rerender: !e.state.rerender, editing: e.state.editing, editingPages: e.state.editingPages })
+        e.setState({ rerender: !e.state.rerender, editing: e.state.editing, editingPages: e.state.editing })
     })
 }
 

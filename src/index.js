@@ -169,7 +169,15 @@ async function initDB() {
 
     if(await caches.has("database")) {
         var cache = await caches.open("database")
-        var buf = JSON.parse(await (await cache.match("database")).text())
+        cache = await cache.match("database");
+        
+        var buf;
+        if(cache)
+            buf = JSON.parse(await cache.text())
+        else {
+            caches.delete("database")
+            return await new vars.SQL.Database()
+        }
 
         return await new vars.SQL.Database(new Uint8Array(buf));
     }
@@ -215,6 +223,8 @@ async function sendQuery(query) {
 
     return newRows
 }
+
+window.sendQuery = sendQuery;
 
 function genID(length) {
     var chars = "abcdefghijklmnopqrstuvwxyz-=[];,./_+{}|:<>?~!@#$%^&*()0123456789"
