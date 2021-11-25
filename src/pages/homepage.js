@@ -5,6 +5,70 @@ import * as util from "../util.js"
 
 var editingElement;
 
+var keybinds = {};
+var keyStates = {}
+var listenKeys = [];
+
+var removeTimeout; 
+
+window.onkeydown = e => {
+    if(!e.key) return;
+
+    keyStates[e.key.toLowerCase()] = "down"
+
+    clearTimeout(removeTimeout);
+    
+    removeTimeout = setTimeout(() => {
+        if(keyStates[e.key.toLowerCase()])
+            delete keyStates[e.key.toLowerCase()];
+    }, 250);
+}
+
+window.onkeyup = e => {
+    if(!e.key) return;
+
+    console.log(keyStates)
+
+    for(var i of Object.keys(keybinds)) {
+        var success = true;
+
+        for(var f of Object.keys(keyStates)) {
+            if(success == false) break;
+                
+            if(keyStates[f.toLowerCase()] == "down") {
+                if(i.indexOf(f.toLowerCase()) < 0) {
+                    success = false;
+                    break;
+                }
+            }
+            else {
+                if(i.indexOf(f.toLowerCase()) >= 0) {
+                    success = false;
+                    break;
+                }
+            }
+        }
+
+        for(var f of i.split(",")) {
+            if(success == false) break;
+                
+            if(keyStates[f.toLowerCase()] != "down") {
+                success = false;
+                break;
+            }
+        }
+
+        if(success) {
+            window.location.href = `${keybinds[i].split("//").length <= 1 ? "//" + keybinds[i] : keybinds[i]}`
+        }
+    }
+
+    if(keyStates[e.key.toLowerCase()])
+        delete keyStates[e.key.toLowerCase()];
+    
+    
+}
+
 class ContextMenu extends React.Component {
     constructor(props) {
         super(props);
@@ -14,6 +78,51 @@ class ContextMenu extends React.Component {
     componentDidMount() {
         document.addEventListener("click", this.handleClick);
         document.addEventListener("contextmenu", this.handleContextMenu);   
+    }
+
+    ctKeybindClick() {
+        if(document.getElementById("contextKeybind")) {
+            document.getElementById("contextKeybind").addEventListener("click", async e => {
+                this.setState({ xPos: this.state.xPos, yPos: this.state.yPos, showMenu: false });
+
+                //page id editingElement.id
+
+                var pageKeybindSQL = await sendQuery(`SELECT keybind FROM pageKeybinds WHERE id = '${editingElement.id}'`)
+
+                var keybind;
+
+                var stmt;
+
+                if(pageKeybindSQL[0]) {
+                    keybind = prompt("Enter the keybind string (eg shift,f)", pageKeybindSQL[0].keybind)
+
+                    if(keybind == null) return;
+                    if(keybind == "") await sendQuery(`DELETE FROM pageKeybinds WHERE id = '${editingElement.id}'`);
+
+
+                   stmt = `UPDATE pageKeybinds SET keybind = '${keybind}' WHERE id = '${editingElement.id}'`
+                }
+                else {
+
+                    keybind = prompt("Enter the keybind string (eg shift,f)")
+                    if(keybind == null || keybind == "") return;
+
+                    stmt = `INSERT INTO pageKeybinds VALUES('${editingElement.id}', '${keybind}')`
+                }
+
+                if((await sendQuery(`SELECT * FROM pageKeybinds WHERE keybind = '${keybind}'`)).length > 0) return;
+
+                await sendQuery(stmt);
+                    
+                doKeybinds();
+                
+            })
+        }
+        else {
+            setTimeout(() => {
+                this.ctEditClick();
+            }, 50);
+        }
     }
 
     ctEditClick() {
@@ -106,6 +215,7 @@ class ContextMenu extends React.Component {
 
             this.forceUpdate();
 
+            this.ctKeybindClick();
             this.ctEditClick();
             this.ctDeleteClick();
         }
@@ -119,7 +229,7 @@ class ContextMenu extends React.Component {
         }
         return (
                 
-            <div className="menu-container" style={{top: this.state.yPos, left: this.state.xPos}}>
+            <div className="menu-container" style={{top: this.state.yPos, left: this.state.xPos, height: "77.5px"}}>
                 {this.props.children}
             </div>
                 
@@ -139,7 +249,7 @@ class Website extends React.Component {
 
     async componentDidMount() {
         this.sql = sendQuery(`SELECT * FROM containerPages WHERE id = '${this.element.id}' AND container = '${this.element.parentNode.parentNode.id.replace("WebsiteContainer", "")}'`)
-
+        
         this.element.ondragstart = e => { this.drag(e)}
         this.element.ondrop = e => this.drop(e)
         this.element.ondragover = e => this.allowDrop(e)
@@ -366,6 +476,9 @@ class WebsiteContainer extends React.Component {
 
 const CustomMenu = () => (
     <>
+        <div id="contextKeybind">
+            <span>Keybind</span>
+        </div>
         <div id="contextEdit">
             <span>Edit</span>
         </div>
@@ -396,7 +509,7 @@ class HomePage extends React.Component {
         return (
             <page.Page ref={ele => this.element = ele} icon={homeIcon}>
                 {this.children.map(e => e)}
-                <ContextMenu ><CustomMenu /></ContextMenu>
+                <ContextMenu><CustomMenu /></ContextMenu>
                 {websiteContainers.map(e => <WebsiteContainer key={`${e.id}Key`} id={e.id} name={e.containerName} position={e.containerPosition} />)}
                 <img id="editContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
                 <img id="addContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
@@ -601,6 +714,7 @@ async function addContainer() {
 async function pageInit() {
     await sendQuery(`CREATE TABLE IF NOT EXISTS containerPages ('id' VARCHAR, 'url' VARCHAR, 'container' VARCHAR, 'overrideName' VARCHAR);`)
     await sendQuery(`CREATE TABLE IF NOT EXISTS pageContainers ('id' VARCHAR, 'containerName' VARCHAR, 'containerPosition' VARCHAR);`)
+    await sendQuery(`CREATE TABLE IF NOT EXISTS pageKeybinds ('id' VARCHAR, 'keybind' VARCHAR);`)
 
     document.getElementById("editContainer").addEventListener("click", e => { editContainers(); })
     document.getElementById("addContainer").addEventListener("click", e => { addContainer(); })
@@ -613,6 +727,26 @@ async function pageInit() {
     websiteContainer.every(e => {
         e.setState({ rerender: !e.state.rerender, editing: e.state.editing, editingPages: e.state.editing })
     })
+
+    doKeybinds();
+}
+
+async function doKeybinds() {
+    keybinds = {};
+    listenKeys = [];
+    keyStates = {};
+
+    var keybindsSQL = await sendQuery(`SELECT * FROM pageKeybinds`);
+
+    for(var i of keybindsSQL) {
+        if(!websiteLinks.filter(x => x.id == i.id)[0]) continue;
+
+        for(var e of i.keybind.split(",")) {
+            listenKeys.push(e)
+        }
+
+        keybinds[i.keybind.toLowerCase()] = websiteLinks.filter(x => x.id == i.id)[0].url
+    }
 }
 
 var homePage = {

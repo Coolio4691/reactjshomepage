@@ -69,14 +69,15 @@ class Weather extends React.Component {
         this.cityCode = (await sendQuery(`SELECT cityCode FROM cityCodes`))[0].cityCode;
 
         this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
-        this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+        this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
         this.setState({ time: new Date() })
 
         var minutesRemaining = (60 - this.state.time.getMinutes()) * 60000;
 
         setTimeout(async () => {
             this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
-            this.setState({ time: new Date() })
+            this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
+            his.setState({ time: new Date() })
 
             this.weatherLoop();
         }, minutesRemaining);
@@ -98,10 +99,10 @@ class Weather extends React.Component {
             case "humidity":
                 if(this.weather == null || this.weather.main == null) return "0%"
                 return `${this.weather.main.humidity}%`
-            case "rain":
-                if(this.weather == null || this.weather.precipitation == null) return "0mm"
-                if(this.weather.precipitation) return this.weather.precipitation.value + "mm";
-                return "0mm"
+            case "precipitation":
+                if(this.forecast == null || this.forecast.list[0] == null) return "0%"
+                if(this.forecast.list[0].pop) return this.forecast.list[0].pop * 100 + "%";
+                return "0%"
             case "clouds":
                 if(this.weather == null || this.weather.clouds == null) return "0"
                 return `${this.weather.clouds.all}`
@@ -140,8 +141,8 @@ class Weather extends React.Component {
                     <span style={{position: "absolute", top: 30 + "px"}} className="weatherText">Humidity: </span>
                     <span id="weatherHumidity" style={{position: "absolute", top: 31 + "px", left: 80 + "px"}} className="weatherText">{this.getWeather("humidity")}</span>
 
-                    <span style={{position: "absolute", top: 60 + "px"}} className="weatherText">Rain: </span>
-                    <span id="weatherRain" style={{position: "absolute", top: 61 + "px", left: 45 + "px"}} className="weatherText">0mm</span>
+                    <span style={{position: "absolute", top: 60 + "px"}} className="weatherText">Precipitation: </span>
+                    <span id="weatherRain" style={{position: "absolute", top: 61 + "px", left: 110 + "px"}} className="weatherText">{this.getWeather("precipitation")}</span>
 
                     <span style={{position: "absolute", top: 210 + "px"}} className="weatherText">Clouds: </span>
                     <span id="weatherClouds" style={{position: "absolute", top: 211 + "px", left: 65 + "px"}} className="weatherText">{this.getWeather("clouds")}</span>

@@ -71,6 +71,8 @@ async function doPages() {
 }
 
 async function updateCustomPages() {
+    await sendQuery(`CREATE TABLE IF NOT EXISTS customPages ('name' VARCHAR, 'hidden' VARCHAR);`)
+    
     vars.customPages = await sendQuery("SELECT * FROM customPages")
     
     for(var i of vars.customPages) {
