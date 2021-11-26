@@ -175,6 +175,8 @@ class ContextMenu extends React.Component {
                 websiteContainer.every(e => {
                     e.forceUpdate()
                 })
+
+                doKeybinds();
             })
         }
         else {

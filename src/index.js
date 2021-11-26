@@ -144,6 +144,8 @@ async function init() {
     )
 
     reloadCustomPageSettings()
+
+    document.body.focus();
 }
 
 async function reloadCustomPageSettings() {

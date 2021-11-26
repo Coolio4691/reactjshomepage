@@ -100,7 +100,7 @@ class Weather extends React.Component {
                 if(this.weather == null || this.weather.main == null) return "0%"
                 return `${this.weather.main.humidity}%`
             case "precipitation":
-                if(this.forecast == null || this.forecast.list[0] == null) return "0%"
+                if(this.forecast == null || this.forecast.list == null || this.forecast.list[0] == null) return "0%"
                 if(this.forecast.list[0].pop) return this.forecast.list[0].pop * 100 + "%";
                 return "0%"
             case "clouds":
