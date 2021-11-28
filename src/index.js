@@ -2,6 +2,7 @@ import * as vars from './vars.js';
 import * as body from "./classes/body.js"
 import * as homepage from './pages/homepage.js';
 import * as custompage from "./classes/customPage.js"
+import * as databasemanager from "./classes/databasemanager"
 import * as page from "./classes/page.js"
 import * as util from "./util.js"
 
@@ -34,10 +35,25 @@ function sleep(ms) {
 }
 
 async function doPages() {
+    await sendQuery(`CREATE TABLE IF NOT EXISTS cityCodes ('cityCode' VARCHAR)`)
+    await sendQuery(`CREATE TABLE IF NOT EXISTS customPages ('name' VARCHAR, 'hidden' VARCHAR);`)
+
+    await sendQuery(`INSERT INTO cityCodes SELECT '2145461' WHERE NOT EXISTS(SELECT 1 FROM cityCodes WHERE cityCode = '2145461')`)
+
     if(!homepage.homePage) {
         await sleep(10);
 
         return doPages();
+    }
+
+    if(vars.pageContainer) {
+        for(var i of vars.pageContainer.pages) {
+            i.removeImg();
+        }
+
+        while(document.getElementById("pageList").childNodes[0]) {
+            document.getElementById("pageList").childNodes[0].remove()
+        }
     }
 
     while(document.getElementsByName("customPage").length >= 1) {
@@ -49,7 +65,11 @@ async function doPages() {
 
     updateCustomPages();
 
+    if(vars.pageBody)
+      vars.pageBody.forceUpdate();
+
     if(vars.pageContainer) {
+        console.log(vars.pageContainer.pages)
         for(var i of vars.pageContainer.pages) {
             i.addImg();
         }
@@ -140,6 +160,10 @@ async function init() {
     ReactDOM.render(<body.Body />, document.getElementById("root"));
 
     vars.settingsClass.children[2] = (
+        <databasemanager.DatabaseSettings key="databaseSettingsKey"/>
+    )
+
+    vars.settingsClass.children[3] = (
         <custompage.CustomPageSettings key="customPageSettingsKey"/>
     )
 
@@ -182,6 +206,8 @@ async function initDB() {
             caches.delete("database")
             return await new vars.SQL.Database()
         }
+
+        console.log(new Uint8Array(buf))
 
         return await new vars.SQL.Database(new Uint8Array(buf));
     }
@@ -241,4 +267,4 @@ function genID(length) {
     return id;
 }
 
-export { genID, sendQuery, doPages }
+export { genID, sendQuery, doPages, initDB, exportDB }

@@ -13,6 +13,7 @@ var files = [
     "../src/classes/customPage.js",
     "../src/classes/body.js",
     "../src/pages/homepage.js",
+    "../src/classes/databasemanager.js",
     "../src/index.js",
     "../src/events.js",
 ]

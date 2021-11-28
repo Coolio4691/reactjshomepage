@@ -9,6 +9,7 @@ var homeP;
 var settingsCustomPage;
 var customPages = [];
 var currentBackgroundPos;
+var settingsDatabase;
 
 function setIcons(icons) {
     pageIcons = icons;
@@ -42,6 +43,7 @@ homeP,
 settingsCustomPage,
 customPages,
 currentBackgroundPos,
+settingsDatabase,
 setVar,
 setIcons
 

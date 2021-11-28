@@ -27,8 +27,6 @@ window.onkeydown = e => {
 window.onkeyup = e => {
     if(!e.key) return;
 
-    console.log(keyStates)
-
     for(var i of Object.keys(keybinds)) {
         var success = true;
 
@@ -722,7 +720,6 @@ async function pageInit() {
     document.getElementById("addContainer").addEventListener("click", e => { addContainer(); })
 
     websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
-
     websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
 
     vars.homeP.setState({ editing: editing })

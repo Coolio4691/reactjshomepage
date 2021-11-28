@@ -104,6 +104,54 @@ body {
     user-select: none;
 }
 
+.databaseContainer {
+    height: 39px;
+    position: relative;
+    font-size: 12px;
+}
+
+.databaseUploadInput {
+    width: fit-content;
+    overflow: none;
+    position: relative;
+    float: left;
+    margin-left: 5px;
+}
+
+.databaseUploadInput > input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute; 
+    left: 0;
+}
+
+.databaseUploadInput > h1 {
+    cursor: pointer;
+    width: fit-content;
+}
+
+.databaseReset {
+    position: absolute;
+    top: 0;
+    left: 41%;
+    width: fit-content;
+}
+
+.databaseReset > h1 {
+    width: fit-content;
+    cursor: pointer;
+}
+
+.databaseExport {
+    position: absolute;
+    right: 5px;
+    top: 0;
+}
+
+.databaseExport > h1 {
+    cursor: pointer;
+}
 
 i {
     position:relative;
