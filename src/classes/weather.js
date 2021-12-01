@@ -77,7 +77,7 @@ class Weather extends React.Component {
         setTimeout(async () => {
             this.weather = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
             this.forecast = await (await fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${this.cityCode}&appid=51473f473ba9fc29fc3b5735dd245eff&units=metric`)).json()
-            his.setState({ time: new Date() })
+            this.setState({ time: new Date() })
 
             this.weatherLoop();
         }, minutesRemaining);
