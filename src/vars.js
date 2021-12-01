@@ -11,6 +11,8 @@ var customPages = [];
 var currentBackgroundPos;
 var settingsDatabase;
 
+window.disabledScrollElements = []
+
 function setIcons(icons) {
     pageIcons = icons;
 }

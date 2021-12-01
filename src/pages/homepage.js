@@ -659,16 +659,16 @@ a {
 
 #editContainer {
     position: absolute;
-    right: 10px;
-    top: 40px;
+    right: 2px;
+    top: 2px;
     width: 50px;
     height: 50px;
 }
 
 #addContainer {
     position: absolute;
-    right: 70px;
-    top: 40px;
+    right: 60px;
+    top: 2px;
     width: 50px;
     height: 50px;
 }

@@ -11,6 +11,14 @@ document.onmousemove = async e => {
 }
 
 document.addEventListener("wheel", e => {
+    var a = e.target;
+    while(a) {
+        if(window.disabledScrollElements.indexOf(a) >= 0) {
+            return;
+        }
+
+        a = a.parentNode;
+    }
     changePage(e.deltaY, "move")
 })
 

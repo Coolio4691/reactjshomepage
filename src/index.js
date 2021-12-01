@@ -9,6 +9,7 @@ import * as util from "./util.js"
 window.page = page;
 
 window.vars = vars;
+window.util = util;
 
 /*
 page structure
