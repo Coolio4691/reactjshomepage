@@ -141,6 +141,7 @@ class ContextMenu extends React.Component {
                 websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
 
                 websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+                updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
 
                 vars.homeP.forceUpdate();
                 websiteContainer.every(e => {
@@ -168,6 +169,7 @@ class ContextMenu extends React.Component {
                 websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
 
                 websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+                updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
 
                 vars.homeP.forceUpdate();
                 websiteContainer.every(e => {
@@ -211,7 +213,7 @@ class ContextMenu extends React.Component {
         if(editingElement) {
             e.preventDefault();
 
-            this.setState({xPos: `${e.pageX}px`, yPos: `${e.pageY}px`, showMenu: true, });
+            this.setState({xPos: `${e.pageX - 36}px`, yPos: `${e.pageY - 36}px`, showMenu: true, });
 
             this.forceUpdate();
 
@@ -303,6 +305,7 @@ class Website extends React.Component {
 
         websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
         websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+        updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
 
         vars.homeP.forceUpdate();
         this.forceUpdate();
@@ -310,7 +313,6 @@ class Website extends React.Component {
         dropTo = null
         toDrop = null
     } 
-
 }
 
 class WebsiteContainer extends React.Component {
@@ -331,6 +333,7 @@ class WebsiteContainer extends React.Component {
 
             websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
             websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+            updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
 
             vars.homeP.forceUpdate();
             this.forceUpdate();
@@ -345,6 +348,7 @@ class WebsiteContainer extends React.Component {
             websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
 
             websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+            updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
             
             vars.homeP.forceUpdate();
             this.forceUpdate();
@@ -381,6 +385,10 @@ class WebsiteContainer extends React.Component {
                 e.preventDefault();
                 pos3 = e.clientX;
                 pos4 = e.clientY;
+                if(ele.style.top.replace(/[0-9.]/g, "") != "px") {
+                    ele.style.top = util.vhToPX(Number(ele.style.top.replace(/[a-z]/gi, ""))) + "px"
+                    ele.style.left = util.vwToPX(Number(ele.style.left.replace(/[a-z]/gi, ""))) + "px"
+                }
                 document.onmouseup = closeDragElement;
                 document.onmousemove = elementDrag;
             }
@@ -402,9 +410,12 @@ class WebsiteContainer extends React.Component {
         }
         
         function closeDragElement() {
-            var toEditContainerStr = `${ele.style.left.replace("px", "")}, ${ele.style.top.replace("px", "")}`;
+    
+            console.log(Number(ele.style.left.replace("px", "")))
+            var toEditContainerStr = `${util.pxToVW(Number(ele.style.left.replace("px", "")))}, ${util.pxToVH(Number(ele.style.top.replace("px", "")))}`;
     
             sendQuery(`UPDATE pageContainers SET containerPosition = '${toEditContainerStr}' WHERE id = '${that.props.id}'`)
+            sendQuery(`INSERT INTO updatedPages SELECT '${that.props.id}' WHERE NOT EXISTS(SELECT 1 FROM updatedPages WHERE id = '${that.props.id}')`)
     
             document.onmouseup = null;
             document.onmousemove = e => {
@@ -418,9 +429,21 @@ class WebsiteContainer extends React.Component {
     render() {
         if(!this.state.editing && this.state.editingPages) this.state.editingPages = false;
         
+        var leftPos = this.props.position.split(",")[0];
+        var topPos = this.props.position.split(",")[1];
+
+        if(this.props.updated) {
+            leftPos += "vw";
+            topPos += "vh";
+        }
+        else {
+            leftPos += "px";
+            topPos += "px";
+        }
+        
         if(this.state.editing) {
             return (
-                <div id={this.props.id + "WebsiteContainer"} style={{ left: this.props.position.split(",")[0] + "px", top: this.props.position.split(",")[1] + "px" }} className="websiteContainer">
+                <div id={this.props.id + "WebsiteContainer"} style={{ left: leftPos, top: topPos }} className="websiteContainer">
                     <div editing="" className="containerName">
                         <h1 ref={ele => this.pageNameElement = ele}>{this.props.name}</h1>
                     </div>
@@ -434,7 +457,7 @@ class WebsiteContainer extends React.Component {
         }
         else {
             return (
-                <div id={this.props.id + "WebsiteContainer"} style={{ left: this.props.position.split(",")[0] + "px", top: this.props.position.split(",")[1] + "px" }} className="websiteContainer">
+                <div id={this.props.id + "WebsiteContainer"} style={{ left: leftPos, top: topPos }} className="websiteContainer">
                     <div className="containerName">
                         <h1 ref={ele => this.pageNameElement = ele}>{this.props.name}</h1>
                     </div>
@@ -510,7 +533,7 @@ class HomePage extends React.Component {
             <page.Page ref={ele => this.element = ele} icon={homeIcon}>
                 {this.children.map(e => e)}
                 <ContextMenu><CustomMenu /></ContextMenu>
-                {websiteContainers.map(e => <WebsiteContainer key={`${e.id}Key`} id={e.id} name={e.containerName} position={e.containerPosition} />)}
+                {websiteContainers.map(e => <WebsiteContainer key={`${e.id}Key`} id={e.id} name={e.containerName} position={e.containerPosition} updated={updatedContainers.indexOf(e.id) >= 0}/>)}
                 <img id="editContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
                 <img id="addContainer" className="button" style={{ display: "none" }} onLoad={e => e.target.style.display = "block" }/>
             </page.Page>
@@ -687,6 +710,7 @@ a {
 
 var websiteContainer = [];
 var websiteContainers = []
+var updatedContainers = [];
 var websiteLinks = []
 var editing = false;
 
@@ -707,6 +731,7 @@ async function addContainer() {
 
     websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
     websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+    updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
 
     vars.homeP.forceUpdate();
 }
@@ -715,12 +740,14 @@ async function pageInit() {
     await sendQuery(`CREATE TABLE IF NOT EXISTS containerPages ('id' VARCHAR, 'url' VARCHAR, 'container' VARCHAR, 'overrideName' VARCHAR);`)
     await sendQuery(`CREATE TABLE IF NOT EXISTS pageContainers ('id' VARCHAR, 'containerName' VARCHAR, 'containerPosition' VARCHAR);`)
     await sendQuery(`CREATE TABLE IF NOT EXISTS pageKeybinds ('id' VARCHAR, 'keybind' VARCHAR);`)
+    await sendQuery(`CREATE TABLE IF NOT EXISTS updatedPages ('id' VARCHAR);`)
 
     document.getElementById("editContainer").addEventListener("click", e => { editContainers(); })
     document.getElementById("addContainer").addEventListener("click", e => { addContainer(); })
 
     websiteContainers = await sendQuery(`SELECT * FROM pageContainers`);
     websiteLinks = await sendQuery(`SELECT * FROM containerPages`);
+    updatedContainers = (await sendQuery(`SELECT * FROM updatedPages`)).map(i => i.id);
 
     vars.homeP.setState({ editing: editing })
     websiteContainer.every(e => {

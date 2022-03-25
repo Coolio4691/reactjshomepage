@@ -70,7 +70,6 @@ async function doPages() {
       vars.pageBody.forceUpdate();
 
     if(vars.pageContainer) {
-        console.log(vars.pageContainer.pages)
         for(var i of vars.pageContainer.pages) {
             i.addImg();
         }
@@ -164,7 +163,7 @@ async function init() {
         <databasemanager.DatabaseSettings key="databaseSettingsKey"/>
     )
 
-    vars.settingsClass.children[3] = (
+    vars.settingsClass.children[50] = (
         <custompage.CustomPageSettings key="customPageSettingsKey"/>
     )
 
@@ -207,8 +206,6 @@ async function initDB() {
             caches.delete("database")
             return await new vars.SQL.Database()
         }
-
-        console.log(new Uint8Array(buf))
 
         return await new vars.SQL.Database(new Uint8Array(buf));
     }

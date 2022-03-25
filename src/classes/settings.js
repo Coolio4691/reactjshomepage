@@ -10,6 +10,8 @@ class Settings extends React.Component {
     }
 
     async componentDidMount() {
+        window.disabledScrollElements.push(document.getElementById("settingsMenu"))
+
         document.addEventListener("click", e => {
             var settingsMenu = document.getElementById("settingsMenu");
 

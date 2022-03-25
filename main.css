@@ -503,8 +503,14 @@ i {
     font-size: 1.2em;
     border-radius: 12px;
     background-color: #272727;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 10px;
 }
 
+.customPage[top="true"] {
+    margin-top: 5px;
+}
 
 .customPage {
     outline: 1px solid #646464;

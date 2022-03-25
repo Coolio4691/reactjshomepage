@@ -1,14 +1,28 @@
 import * as vars from "./vars.js"
 import * as rules from "./rules.js"
 
-
-
 const getBase64 = (file) => new Promise(function (resolve, reject) {
   let reader = new FileReader();
   reader.readAsDataURL(file);
   reader.onload = () => resolve(reader.result)
   reader.onerror = (error) => reject('Error: ', error);
 })
+
+function pxToVW(px) {
+  return (px / visualViewport.width) * 100
+}
+
+function vwToPX(vw) {
+  return (vw * visualViewport.width) / 100
+}
+
+function pxToVH(px) {
+  return (px / visualViewport.height) * 100
+}
+
+function vhToPX(vh) {
+  return (vh * visualViewport.height) / 100
+}
 
 async function getSetImage(image, data) {
   if(await caches.has(image)) {
@@ -495,4 +509,4 @@ function getWebName(input) {
 }
 //#endregion
 
-export { handleClick, handleLoad, getWebName, extractHostname, changePage, doSelected, getSetImage }
+export { handleClick, handleLoad, getWebName, extractHostname, changePage, doSelected, getSetImage, vwToPX, pxToVW, vhToPX, pxToVH }

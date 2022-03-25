@@ -313,13 +313,24 @@ class CustomPageSetting extends React.Component {
     } 
 
     render() {
-        return (
-            <div id="customPage">
-                <div draggable="true" id={`${this.props.name}Container`} ishidden={this.props.hidden.toString()} name={this.props.name} className="customPage">
-                    <span>{this.props.name}</span>
+        if(this.props.top == "") {
+            return (
+                <div id="customPage">
+                    <div draggable="true" top="true" id={`${this.props.name}Container`} ishidden={this.props.hidden.toString()} name={this.props.name} className="customPage">
+                        <span>{this.props.name}</span>
+                    </div>
                 </div>
-            </div>
-        )
+            )
+        }
+        else {
+            return (
+                <div id="customPage">
+                    <div draggable="true" id={`${this.props.name}Container`} ishidden={this.props.hidden.toString()} name={this.props.name} className="customPage">
+                        <span>{this.props.name}</span>
+                    </div>
+                </div>
+            )
+        }
     }
 }
 
@@ -359,11 +370,23 @@ class CustomPageSettings extends React.Component {
             <div style={{ marginTop: 10 + "px"}}>
                 <h1>Custom Pages</h1>
                 <div className="customPageContainer">
-                    {vars.customPages.map(e => <CustomPageSetting key={`${e.name}Key`} name={e.name} hidden={e.hidden == "false" ? false : true} />)}
+                    {this.formatCustomPages()}
                 </div>
             </div>
             </>
         )
+    }
+
+    formatCustomPages() {
+        var first = true;
+        return vars.customPages.map(e => {
+            if(first) {
+                first = false;
+                return <CustomPageSetting key={`${e.name}Key`} top="" name={e.name} hidden={e.hidden == "false" ? false : true} />
+            }
+
+            return <CustomPageSetting key={`${e.name}Key`} name={e.name} hidden={e.hidden == "false" ? false : true} />
+        })
     }
 }
 
